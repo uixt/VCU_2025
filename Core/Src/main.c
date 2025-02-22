@@ -18,11 +18,15 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "cmsis_os.h"
+//#include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+/* USER CODE END Includes */
+
+/* FreeRTOS includes ---------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -43,8 +47,8 @@
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart2;
 
-osThreadId parkedHandle;
-osThreadId LEDHandle;
+//osThreadId parkedHandle;
+//osThreadId LEDHandle;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -53,8 +57,7 @@ osThreadId LEDHandle;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
-void parked_init(void const * argument);
-void LED_init(void const * argument);
+
 
 /* USER CODE BEGIN PFP */
 
@@ -117,19 +120,19 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of parked */
-  osThreadDef(parked, parked_init, osPriorityNormal, 0, 128);
-  parkedHandle = osThreadCreate(osThread(parked), NULL);
+ // osThreadDef(parked, parked_init, osPriorityNormal, 0, 128);
+  //parkedHandle = osThreadCreate(osThread(parked), NULL);
 
   /* definition and creation of LED */
-  osThreadDef(LED, LED_init, osPriorityNormal, 0, 128);
-  LEDHandle = osThreadCreate(osThread(LED), NULL);
-
+  //osThreadDef(LED, LED_init, osPriorityNormal, 0, 128);
+  //LEDHandle = osThreadCreate(osThread(LED), NULL);
+  xTaskCreate(LED_init, "LED", 128, NULL, 5, NULL);
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
 
   /* Start scheduler */
-  osKernelStart();
+ vTaskStartScheduler();
 
   /* We should never get here as control is now taken by the scheduler */
 
@@ -235,8 +238,8 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-
+//  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+//
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
@@ -271,29 +274,12 @@ void parked_init(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+	  vTaskDelay(1);
   }
   /* USER CODE END 5 */
 }
 
-/* USER CODE BEGIN Header_LED_init */
-/**
-* @brief Function implementing the LED thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_LED_init */
-void LED_init(void const * argument)
-{
-  /* USER CODE BEGIN LED_init */
-  /* Infinite loop */
-  for(;;)
-  {
-	  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-	        osDelay(500);
-  }
-  /* USER CODE END LED_init */
-}
+
 
 /**
   * @brief  Period elapsed callback in non blocking mode
