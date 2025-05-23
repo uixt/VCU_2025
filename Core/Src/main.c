@@ -18,15 +18,15 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-//#include "cmsis_os.h"
+#include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <string.h>
+#include <stdio.h>
+#include "CAN_Transmit.h"
 
-/* USER CODE END Includes */
-
-/* FreeRTOS includes ---------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
+//#include "led.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,11 +45,16 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+CAN_HandleTypeDef hcan;
+
 UART_HandleTypeDef huart2;
 
-//osThreadId parkedHandle;
-//osThreadId LEDHandle;
+osThreadId parkedHandle;
 /* USER CODE BEGIN PV */
+// can variable declare
+CAN_TxHeaderTypeDef   TxHeader;
+uint8_t               TxData[8];
+uint32_t              TxMailbox;
 
 /* USER CODE END PV */
 
@@ -57,7 +62,8 @@ UART_HandleTypeDef huart2;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
-
+static void MX_CAN_Init(void);
+void parked_init(void const * argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -65,6 +71,26 @@ static void MX_USART2_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+volatile uint8_t datacheck = 0;
+
+CAN_RxHeaderTypeDef   RxHeader;
+uint8_t               RxData[8];
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan){
+if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK)
+{
+Error_Handler();
+}
+char msg[64];
+sprintf(msg, "Got CAN ID: 0x%X\n", RxHeader.StdId);
+HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+
+//HAL_UART_Transmit(&huart2, (uint8_t*)"CAN RX callback\n", 16, HAL_MAX_DELAY);
+//if ((RxHeader.StdId == 0x103))
+//{
+//
+//datacheck = 1;
+//}
+}
 
 /* USER CODE END 0 */
 
@@ -76,7 +102,13 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+// define
+TxHeader.IDE = CAN_ID_STD;
+TxHeader.StdId = 0x446;
+TxHeader.RTR = CAN_RTR_DATA;
+TxHeader.DLC = 2;
+TxData[0] = 50;
+TxData[1] = 0xAA;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -98,7 +130,23 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
+  MX_CAN_Init();
   /* USER CODE BEGIN 2 */
+HAL_CAN_Start(&hcan);
+
+if (HAL_CAN_ActivateNotification(&hcan, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
+{
+Error_Handler();
+}
+
+osThreadId canTxTaskHandle;
+osThreadId canRxTaskHandle;
+
+// Prototypes
+void StartCanTxTask(void const * argument);
+void StartCanRxTask(void const * argument);
+
+
 
   /* USER CODE END 2 */
 
@@ -120,29 +168,42 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of parked */
- // osThreadDef(parked, parked_init, osPriorityNormal, 0, 128);
-  //parkedHandle = osThreadCreate(osThread(parked), NULL);
+  osThreadDef(parked, parked_init, osPriorityNormal, 0, 128);
+  parkedHandle = osThreadCreate(osThread(parked), NULL);
 
-  /* definition and creation of LED */
-  //osThreadDef(LED, LED_init, osPriorityNormal, 0, 128);
-  //LEDHandle = osThreadCreate(osThread(LED), NULL);
-  xTaskCreate(LED_init, "LED", 128, NULL, 5, NULL);
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
 
   /* Start scheduler */
- vTaskStartScheduler();
+  osKernelStart();
 
   /* We should never get here as control is now taken by the scheduler */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  int status;
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+      //HAL_UART_Transmit(&huart2, (uint8_t*)"hello world\n", 20, HAL_MAX_DELAY);
+
+      status = HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox);
+
+	  if (status != HAL_OK)
+	  {
+	  Error_Handler ();
+	  }
+	  if (datacheck)
+	  {
+	      HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13); // Or whatever LED you're using
+	      datacheck = 0;
+	  }
+
+	  //osDelay(200); //i want to use
+
   }
   /* USER CODE END 3 */
 }
@@ -186,6 +247,59 @@ void SystemClock_Config(void)
 }
 
 /**
+  * @brief CAN Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_CAN_Init(void)
+{
+
+  /* USER CODE BEGIN CAN_Init 0 */
+
+  /* USER CODE END CAN_Init 0 */
+
+  /* USER CODE BEGIN CAN_Init 1 */
+
+  /* USER CODE END CAN_Init 1 */
+  hcan.Instance = CAN;
+  hcan.Init.Prescaler = 8;
+  hcan.Init.Mode = CAN_MODE_NORMAL;
+  hcan.Init.SyncJumpWidth = CAN_SJW_1TQ;
+  hcan.Init.TimeSeg1 = CAN_BS1_2TQ;
+  hcan.Init.TimeSeg2 = CAN_BS2_5TQ;
+  hcan.Init.TimeTriggeredMode = DISABLE;
+  hcan.Init.AutoBusOff = DISABLE;
+  hcan.Init.AutoWakeUp = DISABLE;
+  hcan.Init.AutoRetransmission = DISABLE;
+  hcan.Init.ReceiveFifoLocked = DISABLE;
+  hcan.Init.TransmitFifoPriority = DISABLE;
+  if (HAL_CAN_Init(&hcan) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN CAN_Init 2 */
+
+  //Set a up a filter
+  //Allow all messages to pass through from any ID
+  	CAN_FilterTypeDef cf1;
+  	cf1.FilterActivation = CAN_FILTER_ENABLE;
+  	cf1.FilterBank = 0;
+  	cf1.FilterFIFOAssignment = CAN_FILTER_FIFO0;
+  	cf1.FilterMode = CAN_FILTERMODE_IDMASK;
+  	cf1.FilterScale = CAN_FILTERSCALE_32BIT;
+  	cf1.FilterIdLow = 0x0;
+  	cf1.FilterIdHigh = 0x0000;
+  	cf1.FilterMaskIdLow = 0x0;
+  	cf1.FilterMaskIdHigh = 0x0000;
+
+
+  // this function applies the filter to the CAN peripheral
+  	HAL_CAN_ConfigFilter(&hcan, &cf1);
+  /* USER CODE END CAN_Init 2 */
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -201,7 +315,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 38400;
+  huart2.Init.BaudRate = 57600;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -238,8 +352,8 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-//  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-//
+  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
@@ -274,12 +388,10 @@ void parked_init(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-	  vTaskDelay(1);
+	  osDelay(1);
   }
   /* USER CODE END 5 */
 }
-
-
 
 /**
   * @brief  Period elapsed callback in non blocking mode
