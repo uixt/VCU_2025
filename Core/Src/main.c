@@ -25,6 +25,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "CAN_Transmit.h"
+#include "CAN_Receive.h"
 
 //#include "led.h"
 /* USER CODE END Includes */
@@ -71,26 +72,39 @@ void parked_init(void const * argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+
 volatile uint8_t datacheck = 0;
-
-CAN_RxHeaderTypeDef   RxHeader;
-uint8_t               RxData[8];
-void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan){
-if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK)
-{
-Error_Handler();
-}
-char msg[64];
-sprintf(msg, "Got CAN ID: 0x%X\n", RxHeader.StdId);
-HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
-
-//HAL_UART_Transmit(&huart2, (uint8_t*)"CAN RX callback\n", 16, HAL_MAX_DELAY);
-//if ((RxHeader.StdId == 0x103))
-//{
+//CAN_RxHeaderTypeDef   RxHeader;
+//uint8_t               RxData[8];
+//void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan){
+//    if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK)
+//    {
+//        Error_Handler();
+//    }
 //
-//datacheck = 1;
+//    datacheck = 1; // signal to your RTOS task
 //}
-}
+//
+
+
+
+//void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan){
+//if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK)
+//{
+//Error_Handler();
+//}
+//char msg[64];
+//sprintf(msg, "Got CAN ID: 0x%X\n", RxHeader.StdId);
+//HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+//
+////HAL_UART_Transmit(&huart2, (uint8_t*)"CAN RX callback\n", 16, HAL_MAX_DELAY);
+////if ((RxHeader.StdId == 0x103))
+////{
+////
+////datacheck = 1;
+////}
+//}
 
 /* USER CODE END 0 */
 
@@ -171,6 +185,13 @@ void StartCanRxTask(void const * argument);
   osThreadDef(parked, parked_init, osPriorityNormal, 0, 128);
   parkedHandle = osThreadCreate(osThread(parked), NULL);
 
+  osThreadDef(canTxTask, StartCanTxTask, osPriorityHigh, 0, 128);
+  canTxTaskHandle = osThreadCreate(osThread(canTxTask), NULL);
+
+  osThreadDef(canRxTask, StartCanRxTask, osPriorityNormal, 0, 128);
+  canRxTaskHandle = osThreadCreate(osThread(canRxTask), NULL);
+
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -190,19 +211,19 @@ void StartCanRxTask(void const * argument);
     /* USER CODE BEGIN 3 */
       //HAL_UART_Transmit(&huart2, (uint8_t*)"hello world\n", 20, HAL_MAX_DELAY);
 
-      status = HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox);
+//      status = HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox);
+//
+//	  if (status != HAL_OK)
+//	  {
+//	  Error_Handler ();
+//	  }
+//	  if (datacheck)
+//	  {
+//	      HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13);
+//	      datacheck = 0;
+//	  }
 
-	  if (status != HAL_OK)
-	  {
-	  Error_Handler ();
-	  }
-	  if (datacheck)
-	  {
-	      HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13); // Or whatever LED you're using
-	      datacheck = 0;
-	  }
-
-	  //osDelay(200); //i want to use
+	  //osDelay(200);
 
   }
   /* USER CODE END 3 */
@@ -281,20 +302,26 @@ static void MX_CAN_Init(void)
 
   //Set a up a filter
   //Allow all messages to pass through from any ID
-  	CAN_FilterTypeDef cf1;
-  	cf1.FilterActivation = CAN_FILTER_ENABLE;
-  	cf1.FilterBank = 0;
-  	cf1.FilterFIFOAssignment = CAN_FILTER_FIFO0;
-  	cf1.FilterMode = CAN_FILTERMODE_IDMASK;
-  	cf1.FilterScale = CAN_FILTERSCALE_32BIT;
-  	cf1.FilterIdLow = 0x0;
-  	cf1.FilterIdHigh = 0x0000;
-  	cf1.FilterMaskIdLow = 0x0;
-  	cf1.FilterMaskIdHigh = 0x0000;
 
 
-  // this function applies the filter to the CAN peripheral
-  	HAL_CAN_ConfigFilter(&hcan, &cf1);
+  	CAN_FilterTypeDef canfilterconfig;
+
+  	canfilterconfig.FilterActivation = ENABLE;
+  	canfilterconfig.FilterBank = 0;
+  	canfilterconfig.FilterFIFOAssignment = CAN_FILTER_FIFO0;
+  	canfilterconfig.FilterIdHigh = 0x0000;
+  	canfilterconfig.FilterIdLow = 0x0000;
+  	canfilterconfig.FilterMaskIdHigh = 0x0000;
+  	canfilterconfig.FilterMaskIdLow = 0x0000;
+  	canfilterconfig.FilterMode = CAN_FILTERMODE_IDMASK;
+  	canfilterconfig.FilterScale = CAN_FILTERSCALE_32BIT;
+  	canfilterconfig.SlaveStartFilterBank = 14;
+
+  	HAL_CAN_ConfigFilter(&hcan, &canfilterconfig);
+
+
+  	HAL_CAN_ActivateNotification(&hcan, CAN_IT_RX_FIFO0_MSG_PENDING);
+
   /* USER CODE END CAN_Init 2 */
 
 }
