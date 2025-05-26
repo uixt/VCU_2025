@@ -75,17 +75,11 @@ void parked_init(void const * argument);
 
 
 volatile uint8_t datacheck = 0;
-//CAN_RxHeaderTypeDef   RxHeader;
-//uint8_t               RxData[8];
-//void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan){
-//    if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK)
-//    {
-//        Error_Handler();
-//    }
-//
-//    datacheck = 1; // signal to your RTOS task
-//}
-//
+extern CAN_RxHeaderTypeDef rxHeader;
+extern uint8_t rxData[8];
+
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan);
+
 
 
 
@@ -123,6 +117,7 @@ TxHeader.RTR = CAN_RTR_DATA;
 TxHeader.DLC = 2;
 TxData[0] = 50;
 TxData[1] = 0xAA;
+extern QueueHandle_t CANq = xQueueCreate(100, sizeof(CANframe));
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
