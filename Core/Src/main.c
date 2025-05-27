@@ -56,6 +56,7 @@ osThreadId parkedHandle;
 CAN_TxHeaderTypeDef   TxHeader;
 uint8_t               TxData[8];
 uint32_t              TxMailbox;
+QueueHandle_t CANq;
 
 /* USER CODE END PV */
 
@@ -73,10 +74,10 @@ void parked_init(void const * argument);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-
+extern volatile struct CANframe;
 volatile uint8_t datacheck = 0;
-extern CAN_RxHeaderTypeDef rxHeader;
-extern uint8_t rxData[8];
+extern CAN_RxHeaderTypeDef RxHeader;
+extern uint8_t RxData[8];
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan);
 
@@ -117,7 +118,7 @@ TxHeader.RTR = CAN_RTR_DATA;
 TxHeader.DLC = 2;
 TxData[0] = 50;
 TxData[1] = 0xAA;
-extern QueueHandle_t CANq = xQueueCreate(100, sizeof(CANframe));
+QueueHandle_t CANq = xQueueCreate(100, sizeof(struct CANframe));
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -279,7 +280,7 @@ static void MX_CAN_Init(void)
   /* USER CODE END CAN_Init 1 */
   hcan.Instance = CAN;
   hcan.Init.Prescaler = 8;
-  hcan.Init.Mode = CAN_MODE_NORMAL;
+  hcan.Init.Mode = CAN_MODE_LOOPBACK;
   hcan.Init.SyncJumpWidth = CAN_SJW_1TQ;
   hcan.Init.TimeSeg1 = CAN_BS1_2TQ;
   hcan.Init.TimeSeg2 = CAN_BS2_5TQ;

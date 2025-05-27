@@ -16,7 +16,10 @@
 #ifndef INC_CAN_RECEIVE_H_
 #define INC_CAN_RECEIVE_H_
 
-
+extern volatile struct CANframe {
+		uint32_t ID;
+    	uint8_t rxData[8];
+};
 
 void StartCanRxTask(void const * argument);
 #endif /* INC_CAN_RECEIVE_H_ */

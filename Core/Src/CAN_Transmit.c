@@ -18,7 +18,7 @@ void StartCanTxTask(void const * argument)
 
     while (1)
     {
-    	HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13);
+    	//HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13);
         txData[0] = 0x0; // your payload
         txData[1] = 0x0;
         txData[2] = 0xB4;
@@ -28,11 +28,13 @@ void StartCanTxTask(void const * argument)
         txData[6] = 0x4C;
         txData[7] = 0x3D;
 
+        //HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13);
+
         if (HAL_CAN_AddTxMessage(&hcan, &txHeader, txData, &txMailbox) != HAL_OK)
         {
             Error_Handler();
         }
 
-        osDelay(250); // send every 1 second
+        osDelay(500); // send every 1 second
     }
 }

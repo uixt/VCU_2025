@@ -6,21 +6,17 @@ extern CAN_HandleTypeDef hcan;
 extern UART_HandleTypeDef huart2;
 extern volatile uint8_t datacheck;
 
-struct CANframe {
-		uint8_t ID;
-    	uint8_t rxData[8];
-};
 
 extern QueueHandle_t CANq;
-extern CAN_RxHeaderTypeDef rxHeader;
-extern uint8_t rxData[8];
+CAN_RxHeaderTypeDef RxHeader;
+uint8_t RxData[8];
 char msg[64];
 uint32_t val;
+struct CANframe temp;
+struct CANframe  receivedFrame;
 
 
-
-
-struct CANframe* makeFrame(CAN_RxHeaderTypeDef header, uint8_t data){
+struct CANframe makeFrame(CAN_RxHeaderTypeDef header, uint8_t data[8]){
 	struct CANframe temp;
 
 	temp.ID = header.StdId;
@@ -37,37 +33,54 @@ struct CANframe* makeFrame(CAN_RxHeaderTypeDef header, uint8_t data){
 }
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan){
+
         if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK)
         {
         	//write to queue
-        	xQueueSendToBackFromISR(CANq, makeFrame(RxHeader, RxData), 1);
+
+
 
             Error_Handler();
         }
+        HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13);
+        temp = makeFrame(RxHeader, RxData);
+        xQueueSendToBackFromISR(CANq, &temp, 1);
 
         datacheck = 1; // signal to your RTOS task
-    }
 }
 
 
 void StartCanRxTask(void const * argument)
 {
 
+
     while (1){
 
+    	if (xQueueReceiveFromISR(CANq, &receivedFrame, pdMS_TO_TICKS(100)) == pdPASS)
+    	        {
+    	            // We got a frame! Now do whatever you want with it:
+//    	            HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13);
+
+    	            // For example, print the CAN ID and data (assuming you have a print func)
+    	            // sprintf(msg, "RX CAN ID: 0x%X Data: %02X %02X\r\n", receivedFrame.StdId, receivedFrame.Data[0], receivedFrame.Data[1]);
+    	            // HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+
+    	            // Do your processing here...
+
+    	        }
 
 //    	val = HAL_CAN_GetRxFifoFillLevel(&hcan, CAN_RX_FIFO0);
 //        if (val > 0)
 //        {
 //            if (HAL_CAN_GetRxMessage(&hcan, CAN_RX_FIFO0, &rxHeader, rxData) == HAL_OK)
 //            {
-//            	HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13);
+           	//HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13);
 //                sprintf(msg, "RX CAN ID: 0x%X Data: %02X %02X\r\n", rxHeader.StdId, rxData[0], rxData[1]);
 //                HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
 //            }
 //        }
 
-        osDelay(10); // small delay to avoid hogging CPU
+        osDelay(1000); // small delay to avoid hogging CPU
     }
 }
 
