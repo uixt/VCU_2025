@@ -49,7 +49,7 @@ void StartCanRxTask(void const *argument) {
 
 		if (xQueueReceiveFromISR(CANq, &receivedFrame, pdMS_TO_TICKS(100)) == pdPASS) {
 
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13);
+//			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13);
 			osDelay(1000);
 		}
 

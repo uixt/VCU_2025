@@ -46,6 +46,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+/* USER CODE BEGIN PV */
 CAN_HandleTypeDef hcan;
 
 UART_HandleTypeDef huart2;
@@ -141,7 +142,8 @@ int main(void) {
 	/* USER CODE END RTOS_QUEUES */
 
 	/* Create the thread(s) */
-
+	/* USER CODE BEGIN RTOS_THREADS */
+	/* add threads, ... */
 	CANq = xQueueCreate(100, sizeof(struct CANframe));
 
 	osThreadDef(parked, parked_init, osPriorityNormal, 0, 128);
@@ -153,8 +155,7 @@ int main(void) {
 	osThreadDef(canRxTask, StartCanRxTask, osPriorityNormal, 0, 128);
 	canRxTaskHandle = osThreadCreate(osThread(canRxTask), NULL);
 
-	/* USER CODE BEGIN RTOS_THREADS */
-	/* add threads, ... */
+
 	/* USER CODE END RTOS_THREADS */
 
 	/* Start scheduler */
@@ -168,19 +169,7 @@ int main(void) {
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
-		//HAL_UART_Transmit(&huart2, (uint8_t*)"hello world\n", 20, HAL_MAX_DELAY);
-//      status = HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox);
-//
-//	  if (status != HAL_OK)
-//	  {
-//	  Error_Handler ();
-//	  }
-//	  if (datacheck)
-//	  {
-//	      HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13);
-//	      datacheck = 0;
-//	  }
-//osDelay(200);
+
 	}
 	/* USER CODE END 3 */
 }
@@ -236,7 +225,7 @@ static void MX_CAN_Init(void) {
 	/* USER CODE END CAN_Init 1 */
 	hcan.Instance = CAN;
 	hcan.Init.Prescaler = 8;
-	hcan.Init.Mode = CAN_MODE_LOOPBACK;
+	hcan.Init.Mode = CAN_MODE_NORMAL;
 	hcan.Init.SyncJumpWidth = CAN_SJW_1TQ;
 	hcan.Init.TimeSeg1 = CAN_BS1_2TQ;
 	hcan.Init.TimeSeg2 = CAN_BS2_5TQ;

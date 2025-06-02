@@ -9,12 +9,13 @@ void StartCanTxTask(void const *argument) {
 
 	// Set up header
 	txHeader.IDE = CAN_ID_STD;
-	txHeader.StdId = 0x501;
+	txHeader.StdId = 0x401;
 	txHeader.RTR = CAN_RTR_DATA;
 	txHeader.DLC = 8;
 
 	while (1) {
 		//HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13);
+
 		txData[0] = 0x0; // your payload
 		txData[1] = 0x0;
 		txData[2] = 0xB4;
@@ -30,7 +31,9 @@ void StartCanTxTask(void const *argument) {
 				!= HAL_OK) {
 			Error_Handler();
 		}
+		HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13);
 
-		osDelay(500); // send every 1 second
+
+		osDelay(100); // send every 1 second
 	}
 }
