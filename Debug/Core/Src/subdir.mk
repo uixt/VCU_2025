@@ -8,6 +8,7 @@ C_SRCS += \
 ../Core/Src/CAN_Receive.c \
 ../Core/Src/CAN_Transmit.c \
 ../Core/Src/freertos.c \
+../Core/Src/gearselecttest.c \
 ../Core/Src/initialize_pins.c \
 ../Core/Src/led.c \
 ../Core/Src/main.c \
@@ -22,6 +23,7 @@ OBJS += \
 ./Core/Src/CAN_Receive.o \
 ./Core/Src/CAN_Transmit.o \
 ./Core/Src/freertos.o \
+./Core/Src/gearselecttest.o \
 ./Core/Src/initialize_pins.o \
 ./Core/Src/led.o \
 ./Core/Src/main.o \
@@ -36,6 +38,7 @@ C_DEPS += \
 ./Core/Src/CAN_Receive.d \
 ./Core/Src/CAN_Transmit.d \
 ./Core/Src/freertos.d \
+./Core/Src/gearselecttest.d \
 ./Core/Src/initialize_pins.d \
 ./Core/Src/led.d \
 ./Core/Src/main.d \
@@ -54,7 +57,7 @@ Core/Src/%.o Core/Src/%.su Core/Src/%.cyclo: ../Core/Src/%.c Core/Src/subdir.mk
 clean: clean-Core-2f-Src
 
 clean-Core-2f-Src:
-	-$(RM) ./Core/Src/CAN_Receive.cyclo ./Core/Src/CAN_Receive.d ./Core/Src/CAN_Receive.o ./Core/Src/CAN_Receive.su ./Core/Src/CAN_Transmit.cyclo ./Core/Src/CAN_Transmit.d ./Core/Src/CAN_Transmit.o ./Core/Src/CAN_Transmit.su ./Core/Src/freertos.cyclo ./Core/Src/freertos.d ./Core/Src/freertos.o ./Core/Src/freertos.su ./Core/Src/initialize_pins.cyclo ./Core/Src/initialize_pins.d ./Core/Src/initialize_pins.o ./Core/Src/initialize_pins.su ./Core/Src/led.cyclo ./Core/Src/led.d ./Core/Src/led.o ./Core/Src/led.su ./Core/Src/main.cyclo ./Core/Src/main.d ./Core/Src/main.o ./Core/Src/main.su ./Core/Src/stm32f3xx_hal_msp.cyclo ./Core/Src/stm32f3xx_hal_msp.d ./Core/Src/stm32f3xx_hal_msp.o ./Core/Src/stm32f3xx_hal_msp.su ./Core/Src/stm32f3xx_hal_timebase_tim.cyclo ./Core/Src/stm32f3xx_hal_timebase_tim.d ./Core/Src/stm32f3xx_hal_timebase_tim.o ./Core/Src/stm32f3xx_hal_timebase_tim.su ./Core/Src/stm32f3xx_it.cyclo ./Core/Src/stm32f3xx_it.d ./Core/Src/stm32f3xx_it.o ./Core/Src/stm32f3xx_it.su ./Core/Src/syscalls.cyclo ./Core/Src/syscalls.d ./Core/Src/syscalls.o ./Core/Src/syscalls.su ./Core/Src/sysmem.cyclo ./Core/Src/sysmem.d ./Core/Src/sysmem.o ./Core/Src/sysmem.su ./Core/Src/system_stm32f3xx.cyclo ./Core/Src/system_stm32f3xx.d ./Core/Src/system_stm32f3xx.o ./Core/Src/system_stm32f3xx.su
+	-$(RM) ./Core/Src/CAN_Receive.cyclo ./Core/Src/CAN_Receive.d ./Core/Src/CAN_Receive.o ./Core/Src/CAN_Receive.su ./Core/Src/CAN_Transmit.cyclo ./Core/Src/CAN_Transmit.d ./Core/Src/CAN_Transmit.o ./Core/Src/CAN_Transmit.su ./Core/Src/freertos.cyclo ./Core/Src/freertos.d ./Core/Src/freertos.o ./Core/Src/freertos.su ./Core/Src/gearselecttest.cyclo ./Core/Src/gearselecttest.d ./Core/Src/gearselecttest.o ./Core/Src/gearselecttest.su ./Core/Src/initialize_pins.cyclo ./Core/Src/initialize_pins.d ./Core/Src/initialize_pins.o ./Core/Src/initialize_pins.su ./Core/Src/led.cyclo ./Core/Src/led.d ./Core/Src/led.o ./Core/Src/led.su ./Core/Src/main.cyclo ./Core/Src/main.d ./Core/Src/main.o ./Core/Src/main.su ./Core/Src/stm32f3xx_hal_msp.cyclo ./Core/Src/stm32f3xx_hal_msp.d ./Core/Src/stm32f3xx_hal_msp.o ./Core/Src/stm32f3xx_hal_msp.su ./Core/Src/stm32f3xx_hal_timebase_tim.cyclo ./Core/Src/stm32f3xx_hal_timebase_tim.d ./Core/Src/stm32f3xx_hal_timebase_tim.o ./Core/Src/stm32f3xx_hal_timebase_tim.su ./Core/Src/stm32f3xx_it.cyclo ./Core/Src/stm32f3xx_it.d ./Core/Src/stm32f3xx_it.o ./Core/Src/stm32f3xx_it.su ./Core/Src/syscalls.cyclo ./Core/Src/syscalls.d ./Core/Src/syscalls.o ./Core/Src/syscalls.su ./Core/Src/sysmem.cyclo ./Core/Src/sysmem.d ./Core/Src/sysmem.o ./Core/Src/sysmem.su ./Core/Src/system_stm32f3xx.cyclo ./Core/Src/system_stm32f3xx.d ./Core/Src/system_stm32f3xx.o ./Core/Src/system_stm32f3xx.su
 
 .PHONY: clean-Core-2f-Src
 
