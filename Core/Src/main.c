@@ -22,11 +22,12 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <string.h>
-#include <stdio.h>
-#include <math.h>
-#include "CAN_Transmit.h"
-#include "CAN_Receive.h"
+// they're in the main.h file, better methinks
+//#include <string.h>
+//#include <stdio.h>
+//#include <math.h>
+//#include "CAN_Transmit.h"
+//#include "CAN_Receive.h"
 //#include "gearselecttest.h"
 
 //#include "led.h"
@@ -58,7 +59,7 @@ UART_HandleTypeDef huart2;
 osThreadId parkedHandle;
 /* USER CODE BEGIN PV */
 volatile uint8_t dma_interrupts_enabled = 0; // Flag to control interrupt enabling
-#define ADC_BUF_LEN 24
+#define ADC_BUF_LEN 16
 uint16_t adc_buf[ADC_BUF_LEN];
 
 /////////////////////////////////////////////
@@ -118,7 +119,7 @@ int main(void) {
 	SystemClock_Config();
 
 	/* USER CODE BEGIN SysInit */
-CANq = xQueueCreate(100, sizeof(struct CANframe));
+CANq = xQueueCreate(100, sizeof(struct CANFrame));
 	osThreadDef(parked, parked_init, osPriorityNormal, 0, 128);
 	parkedHandle = osThreadCreate(osThread(parked), NULL);
 
@@ -321,7 +322,7 @@ static void MX_CAN_Init(void) {
 	/* USER CODE END CAN_Init 1 */
 	hcan.Instance = CAN;
 	hcan.Init.Prescaler = 8;
-	hcan.Init.Mode = CAN_MODE_NORMAL;
+	hcan.Init.Mode = CAN_MODE_LOOPBACK;
 	hcan.Init.SyncJumpWidth = CAN_SJW_1TQ;
 	hcan.Init.TimeSeg1 = CAN_BS1_2TQ;
 	hcan.Init.TimeSeg2 = CAN_BS2_5TQ;

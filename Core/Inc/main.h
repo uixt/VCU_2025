@@ -31,7 +31,11 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <string.h>
+#include <stdio.h>
+#include <math.h>
+#include "CAN_Transmit.h"
+#include "CAN_Receive.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -52,7 +56,13 @@ extern "C" {
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
+
 /* USER CODE BEGIN EFP */
+union Data {
+	int i;
+	float f;
+	uint8_t byte[8];
+};
 
 /* USER CODE END EFP */
 

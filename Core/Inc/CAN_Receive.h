@@ -15,7 +15,7 @@
 #ifndef INC_CAN_RECEIVE_H_
 #define INC_CAN_RECEIVE_H_
 
-struct CANframe {
+struct CANFrame {
 	uint32_t ID;
 	uint8_t rxData[8];
 };
