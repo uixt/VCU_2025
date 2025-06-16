@@ -13,7 +13,7 @@ extern union Data AvgVelocity;
 //	uint8_t byte[8];
 //};
 
-void StartCanTxTask(void const *argument) {
+void can_tx(void const *argument) {
 	CAN_TxHeaderTypeDef txHeader;
 	uint8_t txData[8];
 	uint32_t txMailbox;

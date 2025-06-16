@@ -29,7 +29,6 @@
 //#include "CAN_Transmit.h"
 //#include "CAN_Receive.h"
 //#include "gearselecttest.h"
-
 //#include "led.h"
 /* USER CODE END Includes */
 
@@ -56,7 +55,6 @@ CAN_HandleTypeDef hcan;
 
 UART_HandleTypeDef huart2;
 
-osThreadId parkedHandle;
 /* USER CODE BEGIN PV */
 volatile uint8_t dma_interrupts_enabled = 0; // Flag to control interrupt enabling
 #define ADC_BUF_LEN 16
@@ -67,6 +65,11 @@ uint16_t adc_buf[ADC_BUF_LEN];
 osThreadId parkedHandle;
 osThreadId canTxTaskHandle;
 osThreadId canRxTaskHandle;
+osThreadId buttons_100ms_TaskHandle;
+osThreadId buttons_500ms_TaskHandle;
+
+
+
 
 QueueHandle_t CANq;
 
@@ -84,8 +87,8 @@ static void MX_USART2_UART_Init(void);
 static void MX_CAN_Init(void);
 static void MX_ADC1_Init(void);
 void parked_init(void const *argument);
-void StartCanTxTask(void const *argument);
-void StartCanRxTask(void const *argument);
+void can_tx(void const *argument);
+void can_rx(void const *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -119,16 +122,30 @@ int main(void) {
 	SystemClock_Config();
 
 	/* USER CODE BEGIN SysInit */
-CANq = xQueueCreate(100, sizeof(struct CANFrame));
-	osThreadDef(parked, parked_init, osPriorityNormal, 0, 128);
+	CANq = xQueueCreate(100, sizeof(struct CANFrame));
+
+	osThreadDef(parked, parked_init, osPriorityLow, 0, 128);
 	parkedHandle = osThreadCreate(osThread(parked), NULL);
 
-	osThreadDef(canTxTask, StartCanTxTask, osPriorityHigh, 0, 128);
+	osThreadDef(canTxTask, can_tx, osPriorityNormal, 0, 128);
 	canTxTaskHandle = osThreadCreate(osThread(canTxTask), NULL);
 
-	osThreadDef(canRxTask, StartCanRxTask, osPriorityNormal, 0, 128);
+	osThreadDef(canRxTask, can_rx, osPriorityHigh, 0, 128);
 	canRxTaskHandle = osThreadCreate(osThread(canRxTask), NULL);
 
+	osThreadDef(buttons_task_100ms, buttons_100ms, osPriorityNormal, 0, 128);
+	buttons_100ms_TaskHandle = osThreadCreate(osThread(buttons_task_100ms), NULL);
+
+	osThreadDef(buttons_task_500ms, buttons_500ms, osPriorityNormal, 0, 128);
+		buttons_500ms_TaskHandle = osThreadCreate(osThread(buttons_task_500ms), NULL);
+
+//	osThreadDef(canRxTask, can_rx, osPriorityNormal, 0, 128);
+//		canRxTaskHandle = osThreadCreate(osThread(canRxTask), NULL);
+//
+//		osThreadId BrakeTaskHandle;
+//		osThreadId LeftSignalTaskHandle;
+//		osThreadId RightSignalTaskHandle;
+//		osThreadId HazardTaskHandle;
 	/* USER CODE END SysInit */
 
 	/* Initialize all configured peripherals */
@@ -172,12 +189,11 @@ CANq = xQueueCreate(100, sizeof(struct CANFrame));
 	/* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */
 
-
 	/* USER CODE END RTOS_THREADS */
 
 	/* Start scheduler */
 	osKernelStart();
-    Enable_DMA_Interrupts();
+	Enable_DMA_Interrupts();
 
 	/* We should never get here as control is now taken by the scheduler */
 
@@ -247,7 +263,6 @@ static void MX_ADC1_Init(void) {
 
 	ADC_ChannelConfTypeDef sConfig = { 0 };
 	__HAL_LINKDMA(&hadc1, DMA_Handle, hdma_adc1);
-
 
 	/* USER CODE BEGIN ADC1_Init 1 */
 
@@ -402,31 +417,30 @@ static void MX_DMA_Init(void) {
 //	/* DMA1_Channel1_IRQn interrupt configuration */
 //	HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
 //	HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
-    /* DMA controller clock enable */
-    __HAL_RCC_DMA1_CLK_ENABLE();
+	/* DMA controller clock enable */
+	__HAL_RCC_DMA1_CLK_ENABLE();
 
-    /* Configure DMA for ADC1 */
-    hdma_adc1.Instance = DMA1_Channel1; // replace if using a different channel
-    hdma_adc1.Init.Direction = DMA_PERIPH_TO_MEMORY;
-    hdma_adc1.Init.PeriphInc = DMA_PINC_DISABLE;
-    hdma_adc1.Init.MemInc = DMA_MINC_ENABLE;
-    hdma_adc1.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
-    hdma_adc1.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
-    hdma_adc1.Init.Mode = DMA_CIRCULAR; // 🔁 circular buffer
-    hdma_adc1.Init.Priority = DMA_PRIORITY_HIGH;
+	/* Configure DMA for ADC1 */
+	hdma_adc1.Instance = DMA1_Channel1; // replace if using a different channel
+	hdma_adc1.Init.Direction = DMA_PERIPH_TO_MEMORY;
+	hdma_adc1.Init.PeriphInc = DMA_PINC_DISABLE;
+	hdma_adc1.Init.MemInc = DMA_MINC_ENABLE;
+	hdma_adc1.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
+	hdma_adc1.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
+	hdma_adc1.Init.Mode = DMA_CIRCULAR; // 🔁 circular buffer
+	hdma_adc1.Init.Priority = DMA_PRIORITY_HIGH;
 
-    if (HAL_DMA_Init(&hdma_adc1) != HAL_OK) {
-        Error_Handler();
-    }
+	if (HAL_DMA_Init(&hdma_adc1) != HAL_OK) {
+		Error_Handler();
+	}
 
-    // Link DMA to ADC
-    __HAL_LINKDMA(&hadc1, DMA_Handle, hdma_adc1);
+	// Link DMA to ADC
+	__HAL_LINKDMA(&hadc1, DMA_Handle, hdma_adc1);
 
-    /* DMA interrupt init */
+	/* DMA interrupt init */
 //    HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 5, 0);
 //    HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 }
-
 
 /**
  * @brief GPIO Initialization Function
@@ -447,6 +461,7 @@ static void MX_GPIO_Init(void) {
 	/*Configure GPIO pin Output Level */
 	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
+	// default pins
 	/*Configure GPIO pin : B1_Pin */
 	GPIO_InitStruct.Pin = B1_Pin;
 	GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
@@ -460,6 +475,9 @@ static void MX_GPIO_Init(void) {
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 	HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
+	/* USER CODE BEGIN MX_GPIO_Init_2 */
+	//////////////////////////////////////////
+	// Gear selection pins
 	/*Configure GPIO pin : Drive_Pin */
 	GPIO_InitStruct.Pin = Drive_Pin;
 	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
@@ -481,33 +499,95 @@ static void MX_GPIO_Init(void) {
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	/* USER CODE BEGIN MX_GPIO_Init_2 */
+	//////////////////////////////////////////
+	// Button input pins
+
+	GPIO_InitStruct.Pin = BrakePedal_in_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+	GPIO_InitStruct.Pull = GPIO_PULLUP;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(BrakePedal_in_GPIO_Port, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = L_SignalLight_in_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+	GPIO_InitStruct.Pull = GPIO_PULLUP;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(L_SignalLight_in_GPIO_Port, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = R_SignalLight_in_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+	GPIO_InitStruct.Pull = GPIO_PULLUP;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(R_SignalLight_in_GPIO_Port, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = Hazard_in_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+	GPIO_InitStruct.Pull = GPIO_PULLUP;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(Hazard_in_GPIO_Port, &GPIO_InitStruct);
+
+	//////////////////////////////////////////
+	// pins providing output to lights
+	GPIO_InitStruct.Pin = BrakeLight_out_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(BrakeLight_out_GPIO_Port, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = L_SignalLight_out_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(L_SignalLight_out_GPIO_Port, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = R_SignalLight_out_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(R_SignalLight_out_GPIO_Port, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = DRLLeft_out_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(DRLLeft_out_GPIO_Port, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = DRLRight_out_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(DRLLeft_out_GPIO_Port, &GPIO_InitStruct);
+
+	////////////////////////////////////////
+
 	/* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
 
 /* Enable DMA interrupts after RTOS is running */
- void Enable_DMA_Interrupts(void) {
-    /* Give time for RTOS to stabilize */
-    osDelay(100);
+void Enable_DMA_Interrupts(void) {
+	/* Give time for RTOS to stabilize */
+	osDelay(100);
 
-    /* Configure at lowest priority */
-    HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 15, 0); // Lowest priority
-    HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+	/* Configure at lowest priority */
+	HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 15, 0); // Lowest priority
+	HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 
-    /* Activate ADC DMA with interrupts */
-    HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
+	/* Activate ADC DMA with interrupts */
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t*) adc_buf, ADC_BUF_LEN);
 
-    dma_interrupts_enabled = 1;
+	dma_interrupts_enabled = 1;
 }
 
 /* Modified DMA IRQ Handler */
 void DMA1_Channel1_IRQHandler(void) {
-    if(dma_interrupts_enabled) {
-        HAL_DMA_IRQHandler(&hdma_adc1);
-    }
+	if (dma_interrupts_enabled) {
+		HAL_DMA_IRQHandler(&hdma_adc1);
+	}
 }
+
+
 
 // Called when first half of buffer is filled
 // Called when first half of adc_buf is filled (indices 0…ADC_BUF_LEN/2−1)

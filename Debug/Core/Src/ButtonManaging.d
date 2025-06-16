@@ -1,5 +1,5 @@
-Core/Src/CAN_Transmit.o: ../Core/Src/CAN_Transmit.c \
- ../Core/Inc/CAN_Transmit.h ../Core/Inc/main.h \
+Core/Src/ButtonManaging.o: ../Core/Src/ButtonManaging.c \
+ ../Core/Inc/ButtonManaging.h ../Core/Inc/main.h \
  ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal.h \
  ../Core/Inc/stm32f3xx_hal_conf.h \
  ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_rcc.h \
@@ -51,7 +51,7 @@ Core/Src/CAN_Transmit.o: ../Core/Src/CAN_Transmit.c \
  ../Middlewares/Third_Party/FreeRTOS/Source/include/event_groups.h \
  ../Middlewares/Third_Party/FreeRTOS/Source/include/timers.h \
  ../Core/Inc/ButtonManaging.h
-../Core/Inc/CAN_Transmit.h:
+../Core/Inc/ButtonManaging.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal.h:
 ../Core/Inc/stm32f3xx_hal_conf.h:

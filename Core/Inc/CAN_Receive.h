@@ -22,5 +22,5 @@ struct CANFrame {
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan);
 
-void StartCanRxTask(void const *argument);
+void can_rx(void const *argument);
 #endif /* INC_CAN_RECEIVE_H_ */

@@ -77,7 +77,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 	datacheck = 1; // signal to your RTOS task
 }
 
-void StartCanRxTask(void const *argument) {
+void can_rx(void const *argument) {
 //	int count;
 //	CANq = xQueueCreate(100, sizeof(struct CANFrame)); // I didn't realize this was here ca..
 	vQueueAddToRegistry(CANq, "CAN queue");
@@ -147,10 +147,15 @@ void StartCanRxTask(void const *argument) {
 			}
 //			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13);
 			AvgVelocity.f = (TelemVelocity_1.f + TelemVelocity_2.f) / 2.0f;
-			osDelay(1000);
+			osDelay(100);
 		}
 
 //		count = uxQueueMessagesWaiting(CANq);
 	}
 
 }
+
+//void sendTelem(void){
+//	sprintf
+//	HAL_UART_Transmit()
+//}

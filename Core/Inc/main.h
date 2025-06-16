@@ -36,6 +36,7 @@ extern "C" {
 #include <math.h>
 #include "CAN_Transmit.h"
 #include "CAN_Receive.h"
+#include "ButtonManaging.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -76,6 +77,8 @@ union Data {
 #define LD2_Pin GPIO_PIN_13
 #define LD2_GPIO_Port GPIOB
 
+
+// Gear selection pins
 #define Drive_Pin GPIO_PIN_7
 #define Drive_GPIO_Port GPIOA
 
@@ -84,6 +87,40 @@ union Data {
 
 #define Reverse_Pin GPIO_PIN_5
 #define Reverse_GPIO_Port GPIOA
+
+
+// button input pins
+#define BrakePedal_in_Pin GPIO_PIN_9
+#define BrakePedal_in_GPIO_Port GPIOA
+
+#define L_SignalLight_in_Pin GPIO_PIN_10
+#define L_SignalLight_in_GPIO_Port GPIOB
+
+#define R_SignalLight_in_Pin GPIO_PIN_1
+#define R_SignalLight_in_GPIO_Port GPIOB
+
+#define Hazard_in_Pin GPIO_PIN_0
+#define Hazard_in_GPIO_Port GPIOC
+
+
+// pins providing output to lights
+#define BrakeLight_out_Pin GPIO_PIN_8
+#define BrakeLight_out_GPIO_Port GPIOC
+
+#define L_SignalLight_out_Pin GPIO_PIN_11
+#define L_SignalLight_out_GPIO_Port GPIOB
+
+#define R_SignalLight_out_Pin GPIO_PIN_6
+#define R_SignalLight_out_GPIO_Port GPIOC
+
+#define DRLLeft_out_Pin GPIO_PIN_5
+#define DRLLeft_out_GPIO_Port GPIOC
+
+#define DRLRight_out_Pin GPIO_PIN_12
+#define DRLRight_out_GPIO_Port GPIOB
+
+
+
 
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA

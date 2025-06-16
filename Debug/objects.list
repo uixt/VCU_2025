@@ -1,7 +1,7 @@
+"./Core/Src/ButtonManaging.o"
 "./Core/Src/CAN_Receive.o"
 "./Core/Src/CAN_Transmit.o"
 "./Core/Src/freertos.o"
-"./Core/Src/gearselecttest.o"
 "./Core/Src/initialize_pins.o"
 "./Core/Src/led.o"
 "./Core/Src/main.o"

@@ -1,1 +1,1 @@
-../Core/Src/CAN_Transmit.c:16:6:StartCanTxTask	7
+../Core/Src/CAN_Transmit.c:16:6:can_tx	7

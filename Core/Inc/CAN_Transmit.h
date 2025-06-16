@@ -15,6 +15,6 @@
 
 
 
-void StartCanTxTask(void const * argument);
+void can_tx(void const * argument);
 
 #endif
