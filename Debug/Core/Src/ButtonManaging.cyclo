@@ -1,6 +1,6 @@
 ../Core/Src/ButtonManaging.c:16:6:brake_light	2
-../Core/Src/ButtonManaging.c:32:6:r_signal_light	2
-../Core/Src/ButtonManaging.c:48:6:l_signal_light	2
-../Core/Src/ButtonManaging.c:64:6:hazard_light	2
-../Core/Src/ButtonManaging.c:80:6:buttons_100ms	1
-../Core/Src/ButtonManaging.c:85:6:buttons_500ms	1
+../Core/Src/ButtonManaging.c:47:6:r_signal_light	2
+../Core/Src/ButtonManaging.c:61:6:l_signal_light	2
+../Core/Src/ButtonManaging.c:77:6:hazard_light	2
+../Core/Src/ButtonManaging.c:93:6:buttons_100ms	1
+../Core/Src/ButtonManaging.c:100:6:buttons_500ms	1

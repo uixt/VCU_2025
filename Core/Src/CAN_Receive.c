@@ -145,7 +145,7 @@ void can_rx(void const *argument) {
 //					memcpy(BMS_CurrentDraw.byte, RxData, CurrentDrawSize);
 //					break;
 			}
-//			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13);
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13);
 			AvgVelocity.f = (TelemVelocity_1.f + TelemVelocity_2.f) / 2.0f;
 			osDelay(100);
 		}

@@ -139,7 +139,7 @@ void can_tx(void const *argument) {
 		}
 //		  HAL_UART_Transmit(&huart2, "hello world\n", 20, HAL_MAX_DELAY);
 
-		HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13);
+//		HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13);
 
 		osDelay(100); // send every 1 second
 	}

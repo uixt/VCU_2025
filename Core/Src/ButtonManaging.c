@@ -14,23 +14,37 @@
 
 
 void brake_light(void) {
-	for (;;) {
-		if (HAL_GPIO_ReadPin(BrakePedal_in_GPIO_Port, BrakePedal_in_Pin)
-				== GPIO_PIN_SET) {
-			HAL_GPIO_WritePin(BrakeLight_out_GPIO_Port, BrakeLight_out_Pin,
-					GPIO_PIN_SET);
-		}
-		else {
-			HAL_GPIO_WritePin(BrakeLight_out_GPIO_Port, BrakeLight_out_Pin,
-					GPIO_PIN_RESET);
+//		if (HAL_GPIO_ReadPin(BrakePedal_in_GPIO_Port, BrakePedal_in_Pin)
+//				== GPIO_PIN_SET) {
+//			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_13,GPIO_PIN_SET);
+//			HAL_GPIO_WritePin(BrakeLight_out_GPIO_Port, BrakeLight_out_Pin,
+//					GPIO_PIN_SET);
+//		}
+//		else {
+//			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_13,GPIO_PIN_RESET);
+//
+//			HAL_GPIO_WritePin(BrakeLight_out_GPIO_Port, BrakeLight_out_Pin,
+//					GPIO_PIN_RESET);
+//
+//		}
 
-		}
+		int state = HAL_GPIO_ReadPin(BrakePedal_in_GPIO_Port, BrakePedal_in_Pin);
+			    if (!state) {
+			        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_13, GPIO_PIN_SET);
+					HAL_GPIO_WritePin(BrakeLight_out_GPIO_Port, BrakeLight_out_Pin,
+								GPIO_PIN_SET);
+
+			    } else {
+			        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_13, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(BrakeLight_out_GPIO_Port, BrakeLight_out_Pin,
+								GPIO_PIN_RESET);
+			    }
+
 
 	}
-}
+
 
 void r_signal_light(void) {
-	for (;;) {
 		if (HAL_GPIO_ReadPin(R_SignalLight_out_GPIO_Port,
 				R_SignalLight_out_Pin) == GPIO_PIN_SET) {
 			HAL_GPIO_TogglePin(R_SignalLight_out_GPIO_Port,
@@ -41,12 +55,11 @@ void r_signal_light(void) {
 					R_SignalLight_out_Pin, GPIO_PIN_RESET);
 		}
 
-	}
 }
 
 
 void l_signal_light(void) {
-	for (;;) {
+
 		if (HAL_GPIO_ReadPin(L_SignalLight_out_GPIO_Port,
 				L_SignalLight_out_Pin) == GPIO_PIN_SET) {
 			HAL_GPIO_TogglePin(L_SignalLight_out_GPIO_Port,
@@ -57,12 +70,12 @@ void l_signal_light(void) {
 					L_SignalLight_out_Pin, GPIO_PIN_RESET);
 		}
 
-	}
+
 }
 
 
 void hazard_light(void) {
-	for (;;) {
+
 		if (HAL_GPIO_ReadPin(Hazard_in_GPIO_Port, Hazard_in_Pin)
 				== GPIO_PIN_SET) {
 			HAL_GPIO_TogglePin(R_SignalLight_out_GPIO_Port,
@@ -73,20 +86,24 @@ void hazard_light(void) {
 			HAL_GPIO_WritePin(R_SignalLight_out_GPIO_Port, R_SignalLight_out_Pin, GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(L_SignalLight_out_GPIO_Port, L_SignalLight_out_Pin, GPIO_PIN_RESET);
 		}
-	}
+
 
 }
 
 void buttons_100ms(void){
+	while (1) {
 	brake_light();
-	vTaskDelay(100);
+	osDelay(100);
+	}
 }
 
 void buttons_500ms(void){
+	while (1) {
 	r_signal_light();
 	l_signal_light();
 	hazard_light();
-	vTaskDelay(500);
+	osDelay(500);
+	}
 }
 
 //
