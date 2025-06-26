@@ -57,7 +57,7 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 volatile uint8_t dma_interrupts_enabled = 0; // Flag to control interrupt enabling
-#define ADC_BUF_LEN 16
+#define ADC_BUF_LEN 4
 uint16_t adc_buf[ADC_BUF_LEN];
 
 /////////////////////////////////////////////
@@ -122,21 +122,21 @@ int main(void) {
 	SystemClock_Config();
 
 	/* USER CODE BEGIN SysInit */
-	CANq = xQueueCreate(100, sizeof(struct CANFrame));
+	CANq = xQueueCreate(50, sizeof(struct CANFrame));
 
 	osThreadDef(parked, parked_init, osPriorityLow, 0, 32);
 	parkedHandle = osThreadCreate(osThread(parked), NULL);
 
-	osThreadDef(canTxTask, can_tx, osPriorityNormal, 0, 128);
+	osThreadDef(canTxTask, can_tx, osPriorityHigh, 0, 128);
 	canTxTaskHandle = osThreadCreate(osThread(canTxTask), NULL);
 
 	osThreadDef(canRxTask, can_rx, osPriorityHigh, 0, 128);
 	canRxTaskHandle = osThreadCreate(osThread(canRxTask), NULL);
 
-	osThreadDef(buttons_task_100ms, buttons_100ms, osPriorityHigh, 0, 64);
+	osThreadDef(buttons_task_100ms, buttons_100ms, osPriorityNormal, 0, 64);
 	buttons_100ms_TaskHandle = osThreadCreate(osThread(buttons_task_100ms), NULL);
 
-	osThreadDef(buttons_task_500ms, buttons_500ms, osPriorityHigh, 0, 128);
+	osThreadDef(buttons_task_500ms, buttons_500ms, osPriorityNormal, 0, 512);
 		buttons_500ms_TaskHandle = osThreadCreate(osThread(buttons_task_500ms), NULL);
 
 //	osThreadDef(canRxTask, can_rx, osPriorityNormal, 0, 128);
@@ -337,7 +337,7 @@ static void MX_CAN_Init(void) {
 	/* USER CODE END CAN_Init 1 */
 	hcan.Instance = CAN;
 	hcan.Init.Prescaler = 8;
-	hcan.Init.Mode = CAN_MODE_NORMAL;
+	hcan.Init.Mode = CAN_MODE_LOOPBACK;
 	hcan.Init.SyncJumpWidth = CAN_SJW_1TQ;
 	hcan.Init.TimeSeg1 = CAN_BS1_2TQ;
 	hcan.Init.TimeSeg2 = CAN_BS2_5TQ;

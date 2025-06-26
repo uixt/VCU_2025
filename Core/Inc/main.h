@@ -65,6 +65,9 @@ union Data {
 	uint8_t byte[8];
 };
 
+
+
+
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

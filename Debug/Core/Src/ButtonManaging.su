@@ -1,6 +1,7 @@
-../Core/Src/ButtonManaging.c:16:6:brake_light	16	static
-../Core/Src/ButtonManaging.c:47:6:r_signal_light	8	static
-../Core/Src/ButtonManaging.c:61:6:l_signal_light	8	static
-../Core/Src/ButtonManaging.c:77:6:hazard_light	8	static
-../Core/Src/ButtonManaging.c:93:6:buttons_100ms	8	static
-../Core/Src/ButtonManaging.c:100:6:buttons_500ms	8	static
+../Core/Src/ButtonManaging.c:32:6:telem_to_console	400	static
+../Core/Src/ButtonManaging.c:47:6:brake_light	16	static
+../Core/Src/ButtonManaging.c:77:6:r_signal_light	8	static
+../Core/Src/ButtonManaging.c:90:6:l_signal_light	8	static
+../Core/Src/ButtonManaging.c:104:6:hazard_light	8	static
+../Core/Src/ButtonManaging.c:121:6:buttons_100ms	8	static
+../Core/Src/ButtonManaging.c:128:6:buttons_500ms	8	static

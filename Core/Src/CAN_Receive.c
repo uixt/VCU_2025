@@ -9,34 +9,40 @@ extern QueueHandle_t CANq;
 //Frame setup stuff, keep for final code I think
 CAN_RxHeaderTypeDef RxHeader;
 uint8_t RxData[8];
-char msg[64];
+//char msg[64];
 uint32_t val;
 struct CANFrame temp;
 struct CANFrame receivedFrame;
 
 //union Data Power; 		//bus current max percent of absolute current... what is this
-union Data SendRPM; 		//motor current rpm
-union Data SendCurrent;
+//union Data SendRPM; 		//motor current rpm
+//union Data SendCurrent;
 //union Data BusCurrent;
-union Data TelemVelocity_1;
-union Data TelemVelocity_2;
-union Data AvgVelocity;
-union Data TelemRPM_1;
-union Data TelemRPM_2;
-//union Data HeatSinkTempMC1;
-//union Data HeatSinkTempMC2;
-//union Data AvgHeatSink;
-//union Data BMS_PackTemp;
-//union Data BMS_PackVoltage;
-//union Data BMS_CurrentDraw;
-//union Data SerialNumber;
-//union Data ProhelionID;
+union Data telem_velocity_1;
+union Data telem_velocity_2;
+union Data avg_velocity;
+union Data telem_rpm_1;
+union Data telem_rpm_2;
+union Data heat_sink_temp_mc1;
+union Data heat_sink_temp_mc2;
+union Data avg_heat_sink;
+
+// bms
+union Data bms_high_temp;
+union Data bms_low_temp; // 1c
+union Data bms_pack_voltage; // 0.1V
+union Data bms_high_cell_voltage;
+union Data bms_low_cell_voltage; //0.0001v
+union Data bms_pack_current; // 0.1A
+union Data serial_number;
+union Data prohelion_id;
+
 
 // Array sizes in bytes
-int MCmsgSize = 4;
-int PackTempSize = 1;
-int PackVoltageSize = 2;
-int CurrentDrawSize = 2;
+int mc_msg_size = 4;
+int bms_temp_size = 1;
+int bms_pack_voltage_size = 2;
+int bms_pack_current_size = 2;
 
 // Rx Addresses
 // CAN ID Definitions (use these in switch-case statements)
@@ -45,9 +51,9 @@ int CurrentDrawSize = 2;
 #define HEATSINK_ID_MC1      0x50B
 #define VELOCITY_ID_MC2      0x603
 #define HEATSINK_ID_MC2      0x60B
-#define BMS_TEMP_ID          0x0
-#define BMS_VOLTAGE_ID       0x0
-#define BMS_CURRENT_ID       0x0
+#define BMS_TEMP_ID          0x701
+#define BMS_VOLTAGE_ID       0x702
+#define BMS_CURRENT_ID       0x703
 
 struct CANFrame makeCANFrame(CAN_RxHeaderTypeDef header, uint8_t data[8]) {
 	struct CANFrame temp;
@@ -103,50 +109,57 @@ void can_rx(void const *argument) {
 //					// Vehicle velocity
 			case VELOCITY_ID_MC1:
 				//type: float
-				memcpy(TelemRPM_1.byte, RxData, MCmsgSize);
-				memcpy(TelemVelocity_1.byte, RxData + 5, MCmsgSize); // m/s, convert to mph
+				memcpy(telem_rpm_1.byte, RxData, mc_msg_size);
+				memcpy(telem_velocity_1.byte, RxData + 5, mc_msg_size); // m/s, convert to mph
 				break;
 
 			case VELOCITY_ID_MC2:
 				//type: float
-				memcpy(TelemRPM_2.byte, RxData, MCmsgSize);
-				memcpy(TelemVelocity_2.byte, RxData + 5, MCmsgSize); // m/s, convert to mph
+				memcpy(telem_rpm_2.byte, RxData, mc_msg_size);
+				memcpy(telem_velocity_2.byte, RxData + 5, mc_msg_size); // m/s, convert to mph
 				break;
 
-//					// Heat sink temperature
-//				case HEATSINK_ID_MC1:
-//					//type: float
-//					memcpy(MotorTemp.byte, RxData, MCmsgSize);
-//					memcpy(HeatSinkTempMC1.byte, RxData + 5, MCmsgSize);
-//					break;
+//				// Heat sink temperature
+//			case HEATSINK_ID_MC1:
+//				//type: float
+//				memcpy(MotorTemp.byte, RxData, MCmsgSize);
+//				memcpy(HeatSinkTempMC1.byte, RxData + 5, MCmsgSize);
+//				break;
 //
-//				case HEATSINK_ID_MC2:
-//					//type: float
-//					memcpy(MotorTemp.byte, RxData, MCmsgSize);
-//					memcpy(HeatSinkTempMC2.byte, RxData + 5, MCmsgSize);
-//					break;
-//
-//					// BMS
-//					// BMS Pack Temperature
-//				case BMS_TEMP_ID:
-//					//type: INTEGER
-//					memcpy(BMS_PackTemp.byte, RxData, PackTempSize);
-//					break;
-//
-//					// BMS Pack Voltage
-//				case BMS_VOLTAGE_ID:
-//					//type: Float
-//					memcpy(BMS_PackVoltage.byte, RxData, PackVoltageSize);
-//					break;
-//
-//					//Current Draw
-//				case BMS_CURRENT_ID:
-//					//type: float
-//					memcpy(BMS_CurrentDraw.byte, RxData, CurrentDrawSize);
-//					break;
+//			case HEATSINK_ID_MC2:
+//				//type: float
+//				memcpy(MotorTemp.byte, RxData, MCmsgSize);
+//				memcpy(HeatSinkTempMC2.byte, RxData + 5, MCmsgSize);
+//				break;
+
+				// BMS
+				// BMS Pack Temperature
+			case BMS_TEMP_ID:
+				//units: 1C
+				memcpy(bms_high_temp.byte, RxData, bms_temp_size);
+				memcpy(bms_low_temp.byte, RxData + 2, bms_temp_size);
+
+				break;
+
+				// BMS Pack Voltage
+			case BMS_VOLTAGE_ID:
+				// units: 0.0001V
+				memcpy(bms_pack_voltage.byte, RxData, bms_pack_voltage_size);
+				memcpy(bms_high_cell_voltage.byte, RxData + 3, bms_pack_voltage_size);
+				memcpy(bms_low_cell_voltage.byte, RxData + 5, bms_pack_voltage_size);
+				break;
+
+				//Current Draw
+			case BMS_CURRENT_ID:
+				// units: 0.1A
+				memcpy(bms_pack_current.byte, RxData, bms_pack_current_size);
+				break;
 			}
 			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13);
-			AvgVelocity.f = (TelemVelocity_1.f + TelemVelocity_2.f) / 2.0f;
+			avg_velocity.f = (telem_velocity_1.f + telem_velocity_2.f) / 2.0f;
+
+
+
 			osDelay(100);
 		}
 

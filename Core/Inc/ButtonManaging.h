@@ -6,6 +6,8 @@
  */
 
 #include "main.h"
+#include "stm32f3xx_hal.h"
+
 
 #ifndef INC_BUTTONMANAGING_H_
 #define INC_BUTTONMANAGING_H_

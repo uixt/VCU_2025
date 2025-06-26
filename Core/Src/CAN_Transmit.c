@@ -4,8 +4,7 @@ extern UART_HandleTypeDef huart2;
 extern CAN_HandleTypeDef hcan;
 #define ADC_BUF_LEN 16
 extern uint16_t adc_buf[ADC_BUF_LEN];
-extern union Data AvgVelocity;
-
+extern union Data avg_velocity;
 
 //union Data {
 //	int i;
@@ -36,7 +35,6 @@ void can_tx(void const *argument) {
 			sum += adc_buf[i];
 		}
 
-
 		avg = fabs(sum / ADC_BUF_LEN);
 
 ////		snprintf(msg, sizeof(msg), "Avg: %d\r\n", (uint8_t)avg);
@@ -47,28 +45,29 @@ void can_tx(void const *argument) {
 //		Current.f = avg / 25600.0f;
 
 		// 2. Convert to integer representation (0-100)
-		uint8_t display_value = (uint8_t) (Current.f * 100.0f);
+//		uint8_t display_value = (uint8_t) (Current.f * 100.0f);
+////
+////		// 3. Print with implied decimal
+//		snprintf(msg, sizeof(msg), "Value: 0.%02d\r\n", display_value); // Prints 0.00-0.10
 //
-//		// 3. Print with implied decimal
-		snprintf(msg, sizeof(msg), "Value: 0.%02d\r\n", display_value); // Prints 0.00-0.10
-
-		Current.f = fabs(0.15 - avg / 25600.0f);	//low for testing purposes, maps to max 0.15
-		HAL_UART_Transmit(&huart2, (uint8_t*) msg, strlen(msg), HAL_MAX_DELAY);
+//		Current.f = fabs(0.15 - avg / 25600.0f);//low for testing purposes, maps to max 0.15
+//		HAL_UART_Transmit(&huart2, (uint8_t*) msg, strlen(msg), HAL_MAX_DELAY);
 
 		// gear selection
 		// have to write in conditions for braking later
 		//drive
-		if (!HAL_GPIO_ReadPin(GPIOA, Drive_Pin) && AvgVelocity.f >= 0) {
+		if (!HAL_GPIO_ReadPin(GPIOA, Drive_Pin) && avg_velocity.f >= 0) {
 			Velocity.f = 500.0f;
-		//reverse
-		} else if (!HAL_GPIO_ReadPin(GPIOA, Reverse_Pin) && AvgVelocity.f <= 0){
+			//reverse
+		}
+		else if (!HAL_GPIO_ReadPin(GPIOA, Reverse_Pin) && avg_velocity.f <= 0) {
 			Velocity.f = -500.0f;
-		//neutral
-		} else {
+			//neutral
+		}
+		else {
 			Velocity.f = 0;
 			Current.f = 0;
 		}
-
 
 //		Current.f = 0.00000006*(pow(avg*0.1, 2));
 		txData[0] = Velocity.byte[0];
@@ -137,10 +136,16 @@ void can_tx(void const *argument) {
 				!= HAL_OK) {
 			Error_Handler();
 		}
+
+//		char msg[32];
+//		int len = snprintf(msg, sizeof(msg), "Avg velocity: %f\r\n",
+//				AvgVelocity.f);
+//		HAL_UART_Transmit(&huart2, (uint8_t*) msg, len, HAL_MAX_DELAY);
+
 //		  HAL_UART_Transmit(&huart2, "hello world\n", 20, HAL_MAX_DELAY);
 
-//		HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13);
+		HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13);
 
-		osDelay(100); // send every 1 second
+		osDelay(500); // send every 1 second
 	}
 }
